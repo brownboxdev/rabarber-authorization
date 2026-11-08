@@ -59,13 +59,15 @@ module Rabarber
         processed_context = Rabarber::Inputs::Context.new(context).resolve
         processed_force = Rabarber::Inputs::Boolean.new(force).process
 
-        role_ids = where(name: processed_names, **processed_context).ids
-        role_ids -= Rabarber::RoleAssignment.where(role_id: role_ids).distinct.pluck(:role_id) unless processed_force
-        roleable_ids = Rabarber::RoleAssignment.where(role_id: role_ids).distinct.pluck(:roleable_id)
+        transaction do
+          role_ids = where(name: processed_names, **processed_context).lock.ids
+          role_ids -= Rabarber::RoleAssignment.where(role_id: role_ids).distinct.pluck(:role_id) unless processed_force
+          roleable_ids = Rabarber::RoleAssignment.where(role_id: role_ids).distinct.pluck(:roleable_id)
 
-        delete_with_assignments(where(id: role_ids))
+          delete_with_assignments(where(id: role_ids))
 
-        delete_roleables_cache(roleable_ids, context: processed_context)
+          delete_roleables_cache(roleable_ids, context: processed_context)
+        end
 
         names_in(processed_context)
       end
@@ -96,19 +98,23 @@ module Rabarber
       def deprecated_drop(name, context: nil, force: false)
         processed_force = Rabarber::Inputs::Boolean.new(force).process
         processed_context = Rabarber::Inputs::Context.new(context).resolve
-        role = find_by(name: Rabarber::Inputs::Role.new(name).process, **processed_context)
+        processed_name = Rabarber::Inputs::Role.new(name).process
 
-        raise Rabarber::NotFoundError, "Role not found" unless role
+        transaction do
+          role = lock.find_by(name: processed_name, **processed_context)
 
-        return false if role.role_assignments.exists? && !processed_force
+          raise Rabarber::NotFoundError, "Role not found" unless role
 
-        roleable_ids = role.role_assignments.pluck(:roleable_id)
+          next false if role.role_assignments.exists? && !processed_force
 
-        role.destroy!
+          roleable_ids = role.role_assignments.pluck(:roleable_id)
 
-        delete_roleables_cache(roleable_ids, context: processed_context)
+          role.destroy!
 
-        true
+          delete_roleables_cache(roleable_ids, context: processed_context)
+
+          true
+        end
       end
 
       def names_in(processed_context)
