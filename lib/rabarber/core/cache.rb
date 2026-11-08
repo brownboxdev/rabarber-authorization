@@ -18,14 +18,14 @@ module Rabarber
       def delete(*pairs)
         return unless enabled? && pairs.any?
 
-        ActiveRecord.after_all_transactions_commit do
+        ActiveRecord::Base.current_transaction.after_commit do
           version = current_version
           Rails.cache.delete_multi(pairs.map { |roleable_id, scope| prepare_key(version, roleable_id, scope) })
         end
       end
 
       def clear
-        ActiveRecord.after_all_transactions_commit { rotate_version }
+        ActiveRecord::Base.current_transaction.after_commit { rotate_version }
       end
 
       private
