@@ -49,7 +49,7 @@ On databases without partial index support, such as MySQL, uniqueness of global 
 - Optimized cache key generation
 - Dropped some unnecessary dependencies
 
-To upgrade to v6.0.0, please refer to the [migration guide](https://github.com/brownboxdev/rabarber/discussions/101)
+To upgrade to v6.0.0, please refer to the [migration guide](https://github.com/brownboxdev/rabarber-authorization/discussions/101)
 
 ## v5.2.5
 
@@ -135,7 +135,7 @@ To upgrade to v6.0.0, please refer to the [migration guide](https://github.com/b
 - Added `with_authorization` method for more granular authorization control
 - `Rabarber::Role.rename` and `Rabarber::Role.remove` now require the role to exist
 
-To upgrade to v5.0.0, please refer to the [migration guide](https://github.com/brownboxdev/rabarber/discussions/77)
+To upgrade to v5.0.0, please refer to the [migration guide](https://github.com/brownboxdev/rabarber-authorization/discussions/77)
 
 ### Features:
 
@@ -240,7 +240,7 @@ To upgrade to v5.0.0, please refer to the [migration guide](https://github.com/b
 
 - Changed Rabarber roles table structure
 
-To upgrade to v3.0.0, please refer to the [migration guide](https://github.com/brownboxdev/rabarber/discussions/58)
+To upgrade to v3.0.0, please refer to the [migration guide](https://github.com/brownboxdev/rabarber-authorization/discussions/58)
 
 ### Features:
 
@@ -264,7 +264,7 @@ To upgrade to v3.0.0, please refer to the [migration guide](https://github.com/b
 - Replaced `when_unauthorized` configuration option with an overridable controller method
 - Renamed `Rabarber::Role.assignees_for` method to `Rabarber::Role.assignees`
 
-To upgrade to v2.0.0, please refer to the [migration guide](https://github.com/brownboxdev/rabarber/discussions/52)
+To upgrade to v2.0.0, please refer to the [migration guide](https://github.com/brownboxdev/rabarber-authorization/discussions/52)
 
 ### Features:
 

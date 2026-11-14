@@ -2,8 +2,8 @@
 
 [![Gem Version](https://badge.fury.io/rb/rabarber.svg)](http://badge.fury.io/rb/rabarber)
 [![Downloads](https://img.shields.io/gem/dt/rabarber.svg)](https://rubygems.org/gems/rabarber)
-[![Github Actions badge](https://github.com/brownboxdev/rabarber/actions/workflows/ci.yml/badge.svg)](https://github.com/brownboxdev/rabarber/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/brownboxdev/rabarber.svg)](LICENSE)
+[![Github Actions badge](https://github.com/brownboxdev/rabarber-authorization/actions/workflows/ci.yml/badge.svg)](https://github.com/brownboxdev/rabarber-authorization/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/brownboxdev/rabarber-authorization.svg)](LICENSE)
 
 Rabarber is a role-based authorization library for Ruby on Rails. It provides a set of tools for managing user roles and defining access rules, with support for multi-tenancy through context.
 
@@ -465,7 +465,7 @@ Like authorization, these helpers require an authenticated user. In views that c
 
 ### Getting Help
 
-Have a question or need assistance? Open a discussion in the [discussions section](https://github.com/brownboxdev/rabarber/discussions) for:
+Have a question or need assistance? Open a discussion in the [discussions section](https://github.com/brownboxdev/rabarber-authorization/discussions) for:
 
 - Usage questions
 - Implementation guidance
@@ -473,7 +473,7 @@ Have a question or need assistance? Open a discussion in the [discussions sectio
 
 ### Issues
 
-[Issues](https://github.com/brownboxdev/rabarber/issues) track bugs, planned features, and other work. When reporting a bug, please include:
+[Issues](https://github.com/brownboxdev/rabarber-authorization/issues) track bugs, planned features, and other work. When reporting a bug, please include:
 
 - A clear description of the problem
 - Steps to reproduce the issue
@@ -481,21 +481,21 @@ Have a question or need assistance? Open a discussion in the [discussions sectio
 
 ### Contributing Code
 
-Any open issue is free to pick up or discuss. Check the [issues tab](https://github.com/brownboxdev/rabarber/issues).
+Any open issue is free to pick up or discuss. Check the [issues tab](https://github.com/brownboxdev/rabarber-authorization/issues).
 
-Before contributing, please read the [contributing guidelines](https://github.com/brownboxdev/rabarber/blob/main/CONTRIBUTING.md).
+Before contributing, please read the [contributing guidelines](https://github.com/brownboxdev/rabarber-authorization/blob/main/CONTRIBUTING.md).
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://github.com/brownboxdev/rabarber/blob/main/LICENSE.txt).
+The gem is available as open source under the terms of the [MIT License](https://github.com/brownboxdev/rabarber-authorization/blob/main/LICENSE.txt).
 
 ## Code of Conduct
 
-Everyone interacting in the Rabarber project is expected to follow the [code of conduct](https://github.com/brownboxdev/rabarber/blob/main/CODE_OF_CONDUCT.md).
+Everyone interacting in the Rabarber project is expected to follow the [code of conduct](https://github.com/brownboxdev/rabarber-authorization/blob/main/CODE_OF_CONDUCT.md).
 
 ## Old Versions
 
 Only the latest major version is actively maintained. READMEs for older versions are available here for reference:
 
-[v5.x.x](https://github.com/brownboxdev/rabarber/blob/12a23858e974f5cc0a4ebddfc18bdf84171dd554/README.md) | [v4.x.x](https://github.com/brownboxdev/rabarber/blob/9353e70281971154d5acd70693620197a132c543/README.md) | [v3.x.x](https://github.com/brownboxdev/rabarber/blob/3bb273de7e342004abc7ef07fa4d0a9a3ce3e249/README.md)
- | [v2.x.x](https://github.com/brownboxdev/rabarber/blob/875b357ea949404ddc3645ad66eddea7ed4e2ee4/README.md) | [v1.x.x](https://github.com/brownboxdev/rabarber/blob/b81428429404e197d70317b763e7b2a21e02c296/README.md)
+[v5.x.x](https://github.com/brownboxdev/rabarber-authorization/blob/12a23858e974f5cc0a4ebddfc18bdf84171dd554/README.md) | [v4.x.x](https://github.com/brownboxdev/rabarber-authorization/blob/9353e70281971154d5acd70693620197a132c543/README.md) | [v3.x.x](https://github.com/brownboxdev/rabarber-authorization/blob/3bb273de7e342004abc7ef07fa4d0a9a3ce3e249/README.md)
+ | [v2.x.x](https://github.com/brownboxdev/rabarber-authorization/blob/875b357ea949404ddc3645ad66eddea7ed4e2ee4/README.md) | [v1.x.x](https://github.com/brownboxdev/rabarber-authorization/blob/b81428429404e197d70317b763e7b2a21e02c296/README.md)
