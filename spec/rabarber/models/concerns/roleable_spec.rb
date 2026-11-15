@@ -201,7 +201,7 @@ RSpec.describe Rabarber::Roleable do
         before { Rabarber::Role.find_by(context_type: "User").update!(context_type: "Foo") }
 
         it "raises an error" do
-          expect { subject }.to raise_error(Rabarber::Error, "Context not found: class `Foo` may have been renamed or deleted")
+          expect { subject }.to raise_error(NameError, "uninitialized constant Foo")
         end
       end
 
@@ -209,7 +209,7 @@ RSpec.describe Rabarber::Roleable do
         before { Rabarber::Role.find_by(context: project).update!(context_type: "Foo") }
 
         it "raises an error" do
-          expect { subject }.to raise_error(Rabarber::Error, "Context not found: class `Foo` may have been renamed or deleted")
+          expect { subject }.to raise_error(NameError, "uninitialized constant Foo")
         end
       end
     end

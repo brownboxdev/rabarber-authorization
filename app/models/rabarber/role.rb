@@ -21,8 +21,6 @@ module Rabarber
         rescue ActiveRecord::RecordNotFound
           next
         end
-      rescue NameError => e
-        raise Rabarber::NotFoundError, "Context not found: class `#{e.name}` may have been renamed or deleted"
       end
 
       def register(names, context: nil)
@@ -79,9 +77,7 @@ module Rabarber
 
       def prune
         where.not(context_id: nil).distinct.pluck(:context_type).each do |context_type|
-          context_class = context_type.safe_constantize
-
-          raise Rabarber::NotFoundError, "Context not found: class `#{context_type}` may have been renamed or deleted" unless context_class
+          context_class = context_type.constantize
 
           delete_with_assignments(where(context_type:).where.not(context_id: context_class.select(context_class.primary_key)))
         end

@@ -85,7 +85,7 @@ RSpec.describe Rabarber::Role do
         before { described_class.take.update!(context_type: "Foo") }
 
         it "raises an error" do
-          expect { subject }.to raise_error(Rabarber::NotFoundError, "Context not found: class `Foo` may have been renamed or deleted")
+          expect { subject }.to raise_error(NameError, "uninitialized constant Foo")
         end
       end
 
@@ -93,7 +93,7 @@ RSpec.describe Rabarber::Role do
         before { described_class.find_by(context: project1).update!(context_type: "Foo") }
 
         it "raises an error" do
-          expect { subject }.to raise_error(Rabarber::NotFoundError, "Context not found: class `Foo` may have been renamed or deleted")
+          expect { subject }.to raise_error(NameError, "uninitialized constant Foo")
         end
       end
     end
@@ -745,7 +745,7 @@ RSpec.describe Rabarber::Role do
       end
 
       it "raises with correct message" do
-        expect { subject }.to raise_error(Rabarber::NotFoundError, "Context not found: class `Gone` may have been renamed or deleted")
+        expect { subject }.to raise_error(NameError, "uninitialized constant Gone")
       end
     end
 
