@@ -91,3 +91,50 @@ jobs:
         run: bundle install
       - name: Run RSpec
         run: bundle exec rspec
+
+  database_tests:
+    runs-on: ubuntu-latest
+
+    name: ${{ matrix.database }}
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - database: MySQL
+            database_url: trilogy://root:root@127.0.0.1:3306/rabarber_test
+          - database: PostgreSQL
+            database_url: postgres://postgres:postgres@127.0.0.1:5432/rabarber_test
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: rabarber_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -proot" --health-interval=5s --health-timeout=5s --health-retries=20
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rabarber_test
+        ports:
+          - 5432:5432
+        options: --health-cmd=pg_isready --health-interval=5s --health-timeout=5s --health-retries=20
+
+    env:
+      DATABASE_URL: "${{ matrix.database_url }}"
+      BUNDLE_PATH: "vendor/bundle"
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+      - name: Bundle install
+        run: bundle install
+      - name: Run RSpec
+        run: bundle exec rspec

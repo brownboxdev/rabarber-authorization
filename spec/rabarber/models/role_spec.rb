@@ -137,7 +137,7 @@ RSpec.describe Rabarber::Role do
       it { is_expected.to be false }
     end
 
-    context "when a global role is created concurrently" do
+    context "when a global role is created concurrently", :partial_index do
       let(:context) { nil }
 
       before do
@@ -152,7 +152,7 @@ RSpec.describe Rabarber::Role do
       end
     end
 
-    context "when a class context role is created concurrently" do
+    context "when a class context role is created concurrently", :partial_index do
       let(:context) { Project }
 
       before do

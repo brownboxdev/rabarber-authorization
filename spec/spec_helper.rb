@@ -15,11 +15,15 @@ RSpec.configure do |config|
     mocks.verify_doubled_constant_names = true
   end
 
-  ActiveRecord::Base.establish_connection adapter: "sqlite3", database: ":memory:"
+  ActiveRecord::Base.establish_connection ENV.fetch("DATABASE_URL", "sqlite3::memory:")
 
   config.before(:suite) do
     DatabaseCleaner.strategy = :deletion
     DatabaseCleaner.clean_with(:truncation)
+  end
+
+  config.before(:each, :partial_index) do
+    skip "Role uniqueness can't be enforced without partial indexes yet, see #106" unless ActiveRecord::Base.connection.supports_partial_index?
   end
 
   config.around(:each, :memory_cache) do |example|
