@@ -43,13 +43,11 @@ module Rabarber
 
           raise Rabarber::NotFoundError, "Role not found" unless role
 
-          roleable_ids = role.role_assignments.lock.pluck(:roleable_id)
-
-          next false if exists?(name:, **processed_context) || roleable_ids.any? && !processed_force
+          next false if exists?(name:, **processed_context) || role.role_assignments.lock.exists? && !processed_force
 
           role.update!(name:)
 
-          delete_roleables_cache(roleable_ids, context: processed_context)
+          delete_roleables_cache(role.role_assignments.lock.pluck(:roleable_id), context: processed_context)
 
           true
         end
@@ -64,12 +62,12 @@ module Rabarber
 
         transaction do
           role_ids = where(name: processed_names, **processed_context).lock.ids
-          assignments = Rabarber::RoleAssignment.where(role_id: role_ids).lock.pluck(:role_id, :roleable_id)
-          role_ids -= assignments.map(&:first) unless processed_force
+          role_ids.reject! { Rabarber::RoleAssignment.where(role_id: _1).lock.exists? } unless processed_force
+          roleable_ids = Rabarber::RoleAssignment.where(role_id: role_ids).lock.pluck(:roleable_id).uniq
 
           delete_with_assignments(where(id: role_ids))
 
-          delete_roleables_cache(assignments.map(&:last).uniq, context: processed_context) if processed_force
+          delete_roleables_cache(roleable_ids, context: processed_context)
         end
 
         names_in(processed_context)
@@ -104,9 +102,9 @@ module Rabarber
 
           raise Rabarber::NotFoundError, "Role not found" unless role
 
-          roleable_ids = role.role_assignments.lock.pluck(:roleable_id)
+          next false if role.role_assignments.lock.exists? && !processed_force
 
-          next false if roleable_ids.any? && !processed_force
+          roleable_ids = role.role_assignments.lock.pluck(:roleable_id)
 
           role.destroy!
 
