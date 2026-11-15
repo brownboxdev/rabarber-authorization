@@ -13,6 +13,7 @@
 - Fixed roles assigned or revoked inside a rolled back transaction staying cached
 - Fixed concurrent role creation or renaming discarding the surrounding transaction
 - Fixed the generated migration not working with UUID primary keys on some databases
+- Fixed roles assigned during `revoke_all_roles` staying cached after being revoked
 
 ### Misc:
 
