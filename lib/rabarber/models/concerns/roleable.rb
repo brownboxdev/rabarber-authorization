@@ -24,7 +24,7 @@ module Rabarber
     end
 
     def all_roles
-      Rabarber::Core::Cache.fetch(id, :all) { rabarber_roles.list_all }
+      Rabarber::Core::Cache.fetch(id, :all) { assigned_roles.list_all }
     end
 
     def has_role?(*role_names, context: nil)
@@ -43,7 +43,7 @@ module Rabarber
       Rabarber::Role.register_missing(processed_role_names, processed_context) if processed_create_new
 
       role_ids = Rabarber::Role.where(
-        name: (processed_role_names - rabarber_roles.names_in(processed_context)), **processed_context
+        name: (processed_role_names - assigned_roles.names_in(processed_context)), **processed_context
       ).ids
 
       if role_ids.any?
@@ -76,7 +76,7 @@ module Rabarber
     def revoke_all_roles
       warn_if_unsaved_roleable(:revoke_all_roles)
 
-      roles = rabarber_roles.distinct.pluck(:id, :context_type, :context_id)
+      roles = assigned_roles.pluck(:id, :context_type, :context_id)
 
       rabarber_role_assignments.where(role_id: roles.map(&:first)).delete_all
       rabarber_role_assignments.reset
@@ -98,8 +98,12 @@ module Rabarber
       )
     end
 
+    def assigned_roles
+      Rabarber::Role.where(id: rabarber_role_assignments.select(:role_id))
+    end
+
     def cached_roles(processed_context)
-      Rabarber::Core::Cache.fetch(id, processed_context) { rabarber_roles.names_in(processed_context) }
+      Rabarber::Core::Cache.fetch(id, processed_context) { assigned_roles.names_in(processed_context) }
     end
 
     def delete_roleable_cache(contexts:)

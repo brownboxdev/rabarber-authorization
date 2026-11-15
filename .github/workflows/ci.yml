@@ -80,19 +80,19 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: SQLite UUID
-            database_url: "sqlite3::memory:"
-            uuid: "true"
           - name: MySQL
             database_url: trilogy://root:root@127.0.0.1:3306/rabarber_test
           - name: MySQL UUID
             database_url: trilogy://root:root@127.0.0.1:3306/rabarber_test
-            uuid: "true"
+            id_type: uuid
+          - name: MySQL binary UUID
+            database_url: trilogy://root:root@127.0.0.1:3306/rabarber_test
+            id_type: binary_uuid
           - name: PostgreSQL
             database_url: postgres://postgres:postgres@127.0.0.1:5432/rabarber_test
           - name: PostgreSQL UUID
             database_url: postgres://postgres:postgres@127.0.0.1:5432/rabarber_test
-            uuid: "true"
+            id_type: uuid
 
     services:
       mysql:
@@ -114,7 +114,7 @@ jobs:
 
     env:
       DATABASE_URL: "${{ matrix.database_url }}"
-      UUID_TESTS: "${{ matrix.uuid }}"
+      ID_TYPE: "${{ matrix.id_type }}"
       BUNDLE_PATH: "vendor/bundle"
 
     steps:

@@ -508,7 +508,7 @@ RSpec.describe Rabarber::Roleable do
       before do
         User.find(user.id).assign_roles(:admin)
         Rabarber::Role.register([:manager])
-        allow(user.rabarber_roles).to receive(:names_in).and_return([])
+        allow(user).to receive(:assigned_roles).and_return(Rabarber::Role.none)
       end
 
       it "inserts the already assigned role as well" do
@@ -728,7 +728,7 @@ RSpec.describe Rabarber::Roleable do
       end
 
       it "revokes all roles from the user" do
-        expect { subject }.to change { user.rabarber_roles.count }.from(2).to(0)
+        expect { subject }.to change { user.rabarber_role_assignments.count }.from(2).to(0)
       end
     end
 

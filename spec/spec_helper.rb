@@ -47,14 +47,14 @@ load "#{File.dirname(__FILE__)}/support/schema.rb"
 
 require_relative "support/application"
 
-if ENV["UUID_TESTS"] == "true"
-  require "securerandom"
+if [ENV.fetch("ID_TYPE", nil), ActiveRecord::Base.connection.adapter_name] in ["uuid" | "binary_uuid", "Trilogy"]
+  [User, Client, Project].each { |model_class| model_class.before_create { self.id ||= SecureRandom.uuid } }
+end
 
-  ActiveSupport.on_load(:active_record) do
-    [User, Client, Project].each do |model_class|
-      model_class.before_create do
-        self.id = SecureRandom.uuid if id.blank?
-      end
-    end
-  end
+if ENV["ID_TYPE"] == "binary_uuid"
+  require_relative "support/binary_uuid_type"
+
+  [User, Client, Project].each { |model_class| model_class.attribute :id, BinaryUuidType.new }
+  Rabarber::Role.attribute :context_id, BinaryUuidType.new
+  Rabarber::RoleAssignment.attribute :roleable_id, BinaryUuidType.new
 end
