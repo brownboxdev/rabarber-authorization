@@ -85,8 +85,6 @@ module Rabarber
 
           delete_with_assignments(where(context_type:).where.not(context_id: context_class.select(context_class.primary_key)))
         end
-
-        Rabarber::Core::Cache.clear
       end
 
       def deprecated_register(name, context: nil)

@@ -713,8 +713,8 @@ RSpec.describe Rabarber::Role do
         expect { subject }.to change(described_class, :count).from(2).to(1)
       end
 
-      it "clears the cache" do
-        expect(Rabarber::Core::Cache).to receive(:clear)
+      it "does not clear the cache" do
+        expect(Rabarber::Core::Cache).not_to receive(:clear)
         subject
       end
 
