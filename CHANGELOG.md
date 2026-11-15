@@ -11,11 +11,13 @@
 - Fixed the generated migration creating a broken foreign key when the user table's primary key is not `id`
 - Fixed roles assigned or revoked inside a rolled back transaction staying cached
 - Fixed concurrent role creation or renaming discarding the surrounding transaction
+- Fixed the generated migration not working with UUID primary keys on some databases
 
 ### Misc:
 
 - Deprecated calling `assign_roles`, `revoke_roles`, or `revoke_all_roles` on an unsaved record
 - Deprecated `Rabarber.create_role` and `Rabarber.delete_role`
+- The generator now takes the primary key type from the existing user table, making `--uuid` unnecessary
 
 ## v6.0.3
 
