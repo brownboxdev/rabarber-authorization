@@ -291,6 +291,12 @@ RSpec.describe Rabarber::Roleable do
 
         subject
       end
+
+      it "assigns the roles when the user is saved" do
+        subject
+        user.save!
+        expect(User.find(user.id).roles).to eq([:admin])
+      end
     end
 
     context "when create_new is true" do
@@ -516,19 +522,6 @@ RSpec.describe Rabarber::Roleable do
       it "assigns the other roles" do
         subject
         expect(User.find(user.id).roles).to contain_exactly(:admin, :manager)
-      end
-    end
-
-    context "when revoking roles from an unsaved user" do
-      let(:user) { User.new }
-      let(:roles) { [:admin] }
-      let(:context) { nil }
-      let(:create_new) { true }
-
-      it "assigns the roles when the user is saved" do
-        subject
-        user.save!
-        expect(User.find(user.id).roles).to eq([:admin])
       end
     end
 
