@@ -62,11 +62,7 @@ bundle install
 Generate the migration to store roles (replace `users` with your table name if different):
 
 ```shell
-# For standard integer IDs
 rails generate rabarber:roles users
-
-# For UUID primary keys
-rails generate rabarber:roles users --uuid
 ```
 
 Run the migration:
