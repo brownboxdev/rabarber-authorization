@@ -138,3 +138,7 @@ jobs:
         run: bundle install
       - name: Run RSpec
         run: bundle exec rspec
+      - name: Run RSpec with UUIDs
+        run: bundle exec rspec
+        env:
+          UUID_TESTS: "true"

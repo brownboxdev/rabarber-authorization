@@ -678,7 +678,10 @@ RSpec.describe Rabarber::Role do
     end
 
     context "when the instance context can't be found" do
-      let(:role) { described_class.create!(name: "admin", context_type: "Project", context_id: 42) }
+      let(:project) { Project.create! }
+      let(:role) { described_class.create!(name: "admin", context_type: "Project", context_id: project.id) }
+
+      before { project.destroy! }
 
       it "raises an error" do
         expect { subject }.to raise_error(ActiveRecord::RecordNotFound)
@@ -741,7 +744,7 @@ RSpec.describe Rabarber::Role do
     context "when the class of a context no longer exists" do
       before do
         project.destroy!
-        described_class.create!(name: "manager", context_type: "Gone", context_id: 1)
+        described_class.create!(name: "manager", context_type: "Gone", context_id: project.id)
       end
 
       it "raises with correct message" do

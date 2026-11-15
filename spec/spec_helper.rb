@@ -43,11 +43,7 @@ RSpec.configure do |config|
   end
 end
 
-if ENV["UUID_TESTS"]
-  load "#{File.dirname(__FILE__)}/support/uuid_schema.rb"
-else
-  load "#{File.dirname(__FILE__)}/support/id_schema.rb"
-end
+load "#{File.dirname(__FILE__)}/support/schema.rb"
 
 require_relative "support/application"
 
@@ -55,7 +51,7 @@ if ENV["UUID_TESTS"]
   require "securerandom"
 
   ActiveSupport.on_load(:active_record) do
-    [Rabarber::Role, User, Client, Project].each do |model_class|
+    [User, Client, Project].each do |model_class|
       model_class.before_create do
         self.id = SecureRandom.uuid if id.blank?
       end
