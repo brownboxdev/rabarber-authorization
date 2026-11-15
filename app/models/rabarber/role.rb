@@ -43,7 +43,7 @@ module Rabarber
 
           raise Rabarber::NotFoundError, "Role not found" unless role
 
-          next false if exists?(name:, **processed_context) || role.role_assignments.lock.exists? && !processed_force
+          next false if exists?(name:, **processed_context) || !processed_force && role.role_assignments.lock.exists?
 
           role.update!(name:)
 
@@ -102,7 +102,7 @@ module Rabarber
 
           raise Rabarber::NotFoundError, "Role not found" unless role
 
-          next false if role.role_assignments.lock.exists? && !processed_force
+          next false if !processed_force && role.role_assignments.lock.exists?
 
           roleable_ids = role.role_assignments.lock.pluck(:roleable_id)
 
