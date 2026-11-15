@@ -10,9 +10,13 @@ module Rabarber
 
     argument :table_name, type: :string, required: true
 
-    class_option :uuid, type: :boolean, default: false, desc: "Use UUIDs as primary keys"
-
     def create_migrations
+      @id_type = ActiveRecord::Base.with_connection do |connection|
+        raise Thor::Error, "Table `#{table_name}` does not exist, run its migration first" unless connection.table_exists?(table_name)
+
+        connection.columns(table_name).find { |column| column.name == connection.primary_key(table_name) }.sql_type
+      end
+
       migration_template "create_rabarber_roles.rb.erb", "db/migrate/create_rabarber_roles.rb"
     end
 

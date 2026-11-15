@@ -201,7 +201,7 @@ RSpec.describe Rabarber::Roleable do
         before { Rabarber::Role.find_by(context_type: "User").update!(context_type: "Foo") }
 
         it "raises an error" do
-          expect { subject }.to raise_error(Rabarber::Error, "Context not found: class `Foo` may have been renamed or deleted")
+          expect { subject }.to raise_error(NameError, "uninitialized constant Foo")
         end
       end
 
@@ -209,7 +209,7 @@ RSpec.describe Rabarber::Roleable do
         before { Rabarber::Role.find_by(context: project).update!(context_type: "Foo") }
 
         it "raises an error" do
-          expect { subject }.to raise_error(Rabarber::Error, "Context not found: class `Foo` may have been renamed or deleted")
+          expect { subject }.to raise_error(NameError, "uninitialized constant Foo")
         end
       end
     end
@@ -276,6 +276,28 @@ RSpec.describe Rabarber::Roleable do
     subject { user.assign_roles(*roles, context:, create_new:) }
 
     let(:user) { User.create! }
+
+    context "when assigning roles to an unsaved user" do
+      let(:user) { User.new }
+      let(:roles) { [:admin] }
+      let(:context) { nil }
+      let(:create_new) { true }
+
+      it "warns that assigning roles is deprecated" do
+        expect(Rabarber.deprecator).to receive(:warn).with(
+          "Calling #assign_roles on an unsaved record is deprecated. Save the record before managing roles.",
+          satisfy { |callstack| callstack.first.path == __FILE__ }
+        )
+
+        subject
+      end
+
+      it "assigns the roles when the user is saved" do
+        subject
+        user.save!
+        expect(User.find(user.id).roles).to eq([:admin])
+      end
+    end
 
     context "when create_new is true" do
       let(:create_new) { true }
@@ -466,6 +488,81 @@ RSpec.describe Rabarber::Roleable do
         expect { subject }.to raise_error(Rabarber::InvalidContextError, "Expected an instance of ActiveRecord model, a Class, or nil, got `123`")
       end
     end
+
+    context "when create_new is not a boolean" do
+      let(:user) { User.create! }
+      let(:roles) { [:admin] }
+      let(:context) { nil }
+      let(:create_new) { 1 }
+
+      it "raises with the expected message" do
+        expect { subject }.to raise_error(Rabarber::InvalidArgumentError, "Expected a boolean, got `1`")
+      end
+    end
+
+    context "when one of the roles is assigned to the user concurrently" do
+      let(:roles) { [:admin, :manager] }
+      let(:context) { nil }
+      let(:create_new) { true }
+
+      before do
+        User.find(user.id).assign_roles(:admin)
+        Rabarber::Role.register([:manager])
+        allow(user).to receive(:assigned_roles).and_return(Rabarber::Role.none)
+      end
+
+      it "inserts the already assigned role as well" do
+        expect(user.rabarber_role_assignments).to receive(:insert_all).with(
+          contain_exactly({ role_id: Rabarber::Role.find_by!(name: "admin").id }, { role_id: Rabarber::Role.find_by!(name: "manager").id })
+        ).and_call_original
+
+        subject
+      end
+
+      it "assigns the other roles" do
+        subject
+        expect(User.find(user.id).roles).to contain_exactly(:admin, :manager)
+      end
+    end
+
+    context "when called within a transaction that is rolled back", :memory_cache do
+      let(:roles) { [:admin] }
+      let(:context) { nil }
+      let(:create_new) { true }
+
+      before { user.roles }
+
+      it "does not keep the roles assigned inside the transaction" do
+        ActiveRecord::Base.transaction do
+          subject
+          raise ActiveRecord::Rollback
+        end
+
+        expect(User.find(user.id).has_role?(:admin)).to be false
+      end
+    end
+
+    context "when an after commit callback in the same transaction checks the roles", :memory_cache do
+      let(:roles) { [:admin] }
+      let(:context) { nil }
+      let(:create_new) { true }
+      let(:callback_project) { stub_const("CallbackProject", Class.new(Project)) }
+
+      before { user.roles }
+
+      it "sees the assigned roles" do
+        has_role = nil
+        user_id = user.id
+        callback_project.after_commit { has_role = User.find(user_id).has_role?(:admin) }
+
+        ActiveRecord::Base.transaction do
+          subject
+          callback_project.create!
+        end
+
+        expect(has_role).to be true
+      end
+    end
   end
 
   describe "#revoke_roles" do
@@ -476,6 +573,19 @@ RSpec.describe Rabarber::Roleable do
     let(:context) { nil }
 
     it_behaves_like "role names are validated"
+
+    context "when the user is not saved" do
+      let(:user) { User.new }
+
+      it "warns that revoking roles is deprecated" do
+        expect(Rabarber.deprecator).to receive(:warn).with(
+          "Calling #revoke_roles on an unsaved record is deprecated. Save the record before managing roles.",
+          satisfy { |callstack| callstack.first.path == __FILE__ }
+        )
+
+        subject
+      end
+    end
 
     context "when the user has the given roles" do
       let(:context) { Project }
@@ -532,6 +642,22 @@ RSpec.describe Rabarber::Roleable do
         expect { subject }.to raise_error(Rabarber::InvalidContextError, "Expected an instance of ActiveRecord model, a Class, or nil, got `123`")
       end
     end
+
+    context "when called within a transaction that is rolled back", :memory_cache do
+      before do
+        user.assign_roles(*roles)
+        user.roles
+      end
+
+      it "keeps the roles revoked inside the transaction" do
+        ActiveRecord::Base.transaction do
+          subject
+          raise ActiveRecord::Rollback
+        end
+
+        expect(User.find(user.id).has_role?(*roles)).to be true
+      end
+    end
   end
 
   describe "#revoke_all_roles" do
@@ -571,14 +697,14 @@ RSpec.describe Rabarber::Roleable do
         expect { subject }.not_to change(Rabarber::Role, :count).from(4)
       end
 
-      it "clears the cache" do
-        expect(Rabarber::Core::Cache).to receive(:delete).with(
-          [user.id, { context_type: nil, context_id: nil }],
-          [user.id, { context_type: "Project", context_id: nil }],
-          [user.id, { context_type: "Project", context_id: project.id }],
-          [user.id, :all]
-        )
+      it "clears the cached roles", :memory_cache do
+        [nil, Project, project].each { user.roles(context: _1) }
+        user.all_roles
+
         subject
+
+        expect([nil, Project, project].map { User.find(user.id).roles(context: _1) }).to all(be_empty)
+        expect(User.find(user.id).all_roles).to eq({})
       end
 
       it { is_expected.to eq([]) }
@@ -594,14 +720,66 @@ RSpec.describe Rabarber::Roleable do
       end
     end
 
-    context "when the user has roles with an invalid context key" do
+    context "when the class of one of the user's role contexts no longer exists" do
       before do
         user.assign_roles(:admin)
-        allow(user).to receive(:all_roles).and_return({ 123 => [:admin] })
+        user.assign_roles(:viewer, context: Project)
+        Rabarber::Role.find_by(name: "viewer").update!(context_type: "Foo")
       end
 
-      it "raises with correct message" do
-        expect { subject }.to raise_error(Rabarber::InvalidContextError, "Expected an instance of ActiveRecord model, a Class, or nil, got `123`")
+      it "revokes all roles from the user" do
+        expect { subject }.to change { user.rabarber_role_assignments.count }.from(2).to(0)
+      end
+    end
+
+    context "when a role is assigned to the user while the roles are being revoked", :memory_cache do
+      let(:project) { Project.create! }
+
+      before do
+        user.assign_roles(:admin)
+
+        allow(user.rabarber_role_assignments).to receive(:where).and_wrap_original do |original, *args|
+          concurrent_user = User.find(user.id)
+          concurrent_user.assign_roles(:editor, context: project)
+          concurrent_user.roles(context: project)
+          original.call(*args)
+        end
+      end
+
+      it "revokes the roles the user had before" do
+        subject
+        expect(User.find(user.id).roles).to be_empty
+      end
+
+      it "keeps the role assigned in the meantime in the database" do
+        subject
+        expect(User.with_role(:editor, context: project)).to contain_exactly(user)
+      end
+
+      it "keeps the role assigned in the meantime in the cache" do
+        subject
+        expect(User.find(user.id).roles(context: project)).to eq([:editor])
+      end
+    end
+
+    context "when the user is not saved" do
+      let(:user) { User.new }
+
+      before { user.assign_roles(:admin) }
+
+      it "warns that revoking all roles is deprecated" do
+        expect(Rabarber.deprecator).to receive(:warn).with(
+          "Calling #revoke_all_roles on an unsaved record is deprecated. Save the record before managing roles.",
+          satisfy { |callstack| callstack.first.path == __FILE__ }
+        )
+
+        subject
+      end
+
+      it "does not assign the revoked roles when the user is saved" do
+        subject
+        user.save!
+        expect(User.find(user.id).roles).to be_empty
       end
     end
   end
