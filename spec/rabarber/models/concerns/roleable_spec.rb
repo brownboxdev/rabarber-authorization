@@ -501,7 +501,16 @@ RSpec.describe Rabarber::Roleable do
 
       before do
         User.find(user.id).assign_roles(:admin)
-        allow(user.rabarber_roles).to receive(:list).and_return([])
+        Rabarber::Role.register([:manager])
+        allow(user.rabarber_roles).to receive(:names_in).and_return([])
+      end
+
+      it "inserts the already assigned role as well" do
+        expect(user.rabarber_role_assignments).to receive(:insert_all).with(
+          contain_exactly({ role_id: Rabarber::Role.find_by!(name: "admin").id }, { role_id: Rabarber::Role.find_by!(name: "manager").id })
+        ).and_call_original
+
+        subject
       end
 
       it "assigns the other roles" do
