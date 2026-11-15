@@ -71,40 +71,28 @@ jobs:
       - name: Run RSpec
         run: bundle exec rspec
 
-  uuid_tests:
-    runs-on: ubuntu-latest
-
-    name: UUID Tests
-    permissions:
-      contents: read
-
-    env:
-      UUID_TESTS: "true"
-
-    steps:
-      - uses: actions/checkout@v7
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.3
-      - name: Bundle install
-        run: bundle install
-      - name: Run RSpec
-        run: bundle exec rspec
-
   database_tests:
     runs-on: ubuntu-latest
 
-    name: ${{ matrix.database }}
+    name: ${{ matrix.name }}
     permissions:
       contents: read
     strategy:
       matrix:
         include:
-          - database: MySQL
+          - name: SQLite UUID
+            database_url: "sqlite3::memory:"
+            uuid: "true"
+          - name: MySQL
             database_url: trilogy://root:root@127.0.0.1:3306/rabarber_test
-          - database: PostgreSQL
+          - name: MySQL UUID
+            database_url: trilogy://root:root@127.0.0.1:3306/rabarber_test
+            uuid: "true"
+          - name: PostgreSQL
             database_url: postgres://postgres:postgres@127.0.0.1:5432/rabarber_test
+          - name: PostgreSQL UUID
+            database_url: postgres://postgres:postgres@127.0.0.1:5432/rabarber_test
+            uuid: "true"
 
     services:
       mysql:
@@ -126,6 +114,7 @@ jobs:
 
     env:
       DATABASE_URL: "${{ matrix.database_url }}"
+      UUID_TESTS: "${{ matrix.uuid }}"
       BUNDLE_PATH: "vendor/bundle"
 
     steps:
@@ -138,7 +127,3 @@ jobs:
         run: bundle install
       - name: Run RSpec
         run: bundle exec rspec
-      - name: Run RSpec with UUIDs
-        run: bundle exec rspec
-        env:
-          UUID_TESTS: "true"

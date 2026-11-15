@@ -11,12 +11,12 @@ ActiveRecord::Schema.define do
   drop_table :rabarber_roles, if_exists: true
 
   [:users, :clients, :projects].each do |table|
-    if ENV["UUID_TESTS"] && connection.adapter_name == "PostgreSQL"
+    next create_table(table, force: true, &:timestamps) unless ENV["UUID_TESTS"] == "true"
+
+    if connection.adapter_name == "PostgreSQL"
       create_table table, id: :uuid, force: true, &:timestamps
-    elsif ENV["UUID_TESTS"]
-      create_table table, id: :string, limit: 36, force: true, &:timestamps
     else
-      create_table table, force: true, &:timestamps
+      create_table table, id: :string, limit: 36, force: true, &:timestamps
     end
   end
 end

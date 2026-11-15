@@ -47,7 +47,7 @@ load "#{File.dirname(__FILE__)}/support/schema.rb"
 
 require_relative "support/application"
 
-if ENV["UUID_TESTS"]
+if ENV["UUID_TESTS"] == "true"
   require "securerandom"
 
   ActiveSupport.on_load(:active_record) do
