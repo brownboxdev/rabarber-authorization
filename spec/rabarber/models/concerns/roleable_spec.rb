@@ -708,6 +708,36 @@ RSpec.describe Rabarber::Roleable do
       end
     end
 
+    context "when a role is assigned to the user while the roles are being revoked", :memory_cache do
+      let(:project) { Project.create! }
+
+      before do
+        user.assign_roles(:admin)
+
+        allow(user.rabarber_role_assignments).to receive(:where).and_wrap_original do |original, *args|
+          concurrent_user = User.find(user.id)
+          concurrent_user.assign_roles(:editor, context: project)
+          concurrent_user.roles(context: project)
+          original.call(*args)
+        end
+      end
+
+      it "revokes the roles the user had before" do
+        subject
+        expect(User.find(user.id).roles).to be_empty
+      end
+
+      it "keeps the role assigned in the meantime in the database" do
+        subject
+        expect(User.with_role(:editor, context: project)).to contain_exactly(user)
+      end
+
+      it "keeps the role assigned in the meantime in the cache" do
+        subject
+        expect(User.find(user.id).roles(context: project)).to eq([:editor])
+      end
+    end
+
     context "when the user is not saved" do
       let(:user) { User.new }
 

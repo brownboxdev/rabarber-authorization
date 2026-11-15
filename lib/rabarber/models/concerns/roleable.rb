@@ -76,12 +76,13 @@ module Rabarber
     def revoke_all_roles
       warn_if_unsaved_roleable(:revoke_all_roles)
 
-      contexts = rabarber_roles.distinct.pluck(:context_type, :context_id).map { |context_type, context_id| { context_type:, context_id: } }
+      roles = rabarber_roles.distinct.pluck(:id, :context_type, :context_id)
 
-      rabarber_role_assignments.delete_all
+      rabarber_role_assignments.where(role_id: roles.map(&:first)).delete_all
+      rabarber_role_assignments.reset
       rabarber_roles.reset
 
-      delete_roleable_cache(contexts:) if contexts.any?
+      delete_roleable_cache(contexts: roles.map { |_, context_type, context_id| { context_type:, context_id: } }.uniq) if roles.any?
 
       []
     end
