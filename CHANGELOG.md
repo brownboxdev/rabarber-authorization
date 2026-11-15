@@ -3,6 +3,7 @@
 ### Features:
 
 - Added `Rabarber.create_roles` and `Rabarber.delete_roles` to create and delete several roles at once
+- Added support for binary UUID primary keys in MySQL
 
 ### Bugs:
 
