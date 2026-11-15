@@ -85,18 +85,22 @@ RSpec.describe Rabarber::Core::Cache, :memory_cache do
       context "when called within a transaction" do
         before { described_class.fetch(42, scope) { "foo" } }
 
-        it "deletes the cached value after commit" do
-          ActiveRecord::Base.transaction { subject }
-          expect(described_class.fetch(42, scope)).to be_nil
-        end
-
-        it "keeps the cached value when the transaction is rolled back" do
+        it "deletes the cached value right away" do
           ActiveRecord::Base.transaction do
             subject
             raise ActiveRecord::Rollback
           end
 
-          expect(described_class.fetch(42, scope) { "new" }).to eq("foo")
+          expect(described_class.fetch(42, scope) { "new" }).to eq("new")
+        end
+
+        it "deletes the cached value again after commit" do
+          ActiveRecord::Base.transaction do
+            subject
+            Thread.new { described_class.fetch(42, scope) { "cached by another request" } }.join # rubocop:disable ThreadSafety/NewThread
+          end
+
+          expect(described_class.fetch(42, scope) { "new" }).to eq("new")
         end
       end
     end

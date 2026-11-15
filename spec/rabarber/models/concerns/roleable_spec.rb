@@ -541,6 +541,28 @@ RSpec.describe Rabarber::Roleable do
         expect(User.find(user.id).has_role?(:admin)).to be false
       end
     end
+
+    context "when an after commit callback in the same transaction checks the roles", :memory_cache do
+      let(:roles) { [:admin] }
+      let(:context) { nil }
+      let(:create_new) { true }
+      let(:callback_project) { stub_const("CallbackProject", Class.new(Project)) }
+
+      before { user.roles }
+
+      it "sees the assigned roles" do
+        has_role = nil
+        user_id = user.id
+        callback_project.after_commit { has_role = User.find(user_id).has_role?(:admin) }
+
+        ActiveRecord::Base.transaction do
+          subject
+          callback_project.create!
+        end
+
+        expect(has_role).to be true
+      end
+    end
   end
 
   describe "#revoke_roles" do

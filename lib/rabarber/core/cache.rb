@@ -18,10 +18,10 @@ module Rabarber
       def delete(*pairs)
         return unless enabled? && pairs.any?
 
-        ActiveRecord::Base.current_transaction.after_commit do
-          version = current_version
-          Rails.cache.delete_multi(pairs.map { |roleable_id, scope| prepare_key(version, roleable_id, scope) })
-        end
+        delete_keys(pairs)
+
+        transaction = ActiveRecord::Base.current_transaction
+        transaction.after_commit { delete_keys(pairs) } if transaction.open?
       end
 
       def clear
@@ -32,6 +32,11 @@ module Rabarber
 
       def enabled?
         Rabarber::Configuration.cache_enabled
+      end
+
+      def delete_keys(pairs)
+        version = current_version
+        Rails.cache.delete_multi(pairs.map { |roleable_id, scope| prepare_key(version, roleable_id, scope) })
       end
 
       def prepare_key(version, roleable_id, scope)
