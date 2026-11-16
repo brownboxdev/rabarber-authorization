@@ -34,10 +34,9 @@ end
   - [User Role Methods](#user-role-methods)
   - [Direct Role Management](#direct-role-management)
   - [Authorization](#authorization)
-  - [Dynamic Authorization Rules](#dynamic-authorization-rules)
-  - [When Unauthorized](#when-unauthorized)
   - [Context / Multi-tenancy](#context--multi-tenancy)
   - [View Helpers](#view-helpers)
+  - [Caching](#caching)
 
 **Community Resources:**
   - [Getting Help and Contributing](#getting-help-and-contributing)
@@ -93,12 +92,6 @@ Rabarber.configure do |config|
   # User model name (default: "User")
   config.user_model_name = "User"
 end
-```
-
-Roles are cached by default for better performance. Clear the cache manually when needed:
-
-```rb
-Rabarber::Cache.clear
 ```
 
 ## User Role Methods
@@ -275,7 +268,7 @@ class MixedController < ApplicationController
 end
 ```
 
-## Dynamic Authorization Rules
+### Dynamic Authorization Rules
 
 For more complex scenarios, Rabarber supports dynamic authorization rules:
 
@@ -324,7 +317,7 @@ class InvoicesController < ApplicationController
 end
 ```
 
-## When Unauthorized
+### When Unauthorized
 
 By default, when unauthorized, Rabarber will redirect back (HTML format) or return 403 (other formats). You can override `when_unauthorized` method to customize unauthorized access behavior:
 
@@ -446,7 +439,7 @@ Rabarber.prune
 
 ### Context Migrations
 
-When you rename or remove models used as contexts, you need to update Rabarber's stored context data accordingly. Use these irreversible data migrations:
+When you rename or remove models used as contexts, you need to update Rabarber's stored context data accordingly. Rabarber adds these helpers to your migrations. The changes they make are irreversible:
 
 ```rb
 # Rename a context class (e.g., when you rename your Ticket model to Task)
@@ -489,6 +482,16 @@ Use conditional rendering based on roles:
 ```
 
 Like authorization, these helpers require an authenticated user. In views that can be rendered for both authenticated and unauthenticated visitors, wrap them in your authentication check.
+
+## Caching
+
+Roles are cached by default for better performance. They're kept in your app's cache store for up to an hour, so all app processes must share the same store. Otherwise, a role change made in one process may not be seen by the others until their cached copy expires. If you can't use a shared store, disable caching.
+
+Rabarber clears cached roles automatically when you assign, revoke, rename, or delete roles. If you ever need to clear the cache manually, run:
+
+```rb
+Rabarber::Cache.clear
+```
 
 ## Getting Help and Contributing
 
