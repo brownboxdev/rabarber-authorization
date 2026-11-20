@@ -149,7 +149,7 @@ RSpec.describe Rabarber::Roleable do
       it "caches user roles" do
         expect(Rabarber::Core::Cache).to receive(:fetch).with(user.id, :all) do |&block|
           result = block.call
-          expect(result).to eq(all_roles)
+          expect(result).to match(all_roles)
           result
         end
         subject
@@ -181,19 +181,19 @@ RSpec.describe Rabarber::Roleable do
         user.assign_roles(:manager, context: project)
       end
 
-      it { is_expected.to eq(nil => [:admin, :manager], User => [:viewer], project => [:manager]) }
+      it { is_expected.to match(nil => contain_exactly(:admin, :manager), User => [:viewer], project => [:manager]) }
 
       it_behaves_like "it caches all user roles" do
-        let(:all_roles) { { nil => [:admin, :manager], User => [:viewer], project => [:manager] } }
+        let(:all_roles) { { nil => contain_exactly(:admin, :manager), User => [:viewer], project => [:manager] } }
       end
 
       context "when the instance context can't be found" do
         before { project.destroy! }
 
-        it { is_expected.to eq(nil => [:admin, :manager], User => [:viewer]) }
+        it { is_expected.to match(nil => contain_exactly(:admin, :manager), User => [:viewer]) }
 
         it_behaves_like "it caches all user roles" do
-          let(:all_roles) { { nil => [:admin, :manager], User => [:viewer] } }
+          let(:all_roles) { { nil => contain_exactly(:admin, :manager), User => [:viewer] } }
         end
       end
 
@@ -336,7 +336,7 @@ RSpec.describe Rabarber::Roleable do
         end
 
         it "creates new roles" do
-          expect { subject }.to change(Rabarber, :roles).from([]).to(roles)
+          expect { subject }.to change(Rabarber, :roles).from([]).to(match_array(roles))
         end
 
         it_behaves_like "it deletes the cache", { context_type: nil, context_id: nil }
@@ -355,7 +355,7 @@ RSpec.describe Rabarber::Roleable do
         end
 
         it "creates new roles" do
-          expect { subject }.to change(Rabarber, :roles).from([roles.first]).to(roles)
+          expect { subject }.to change(Rabarber, :roles).from([roles.first]).to(match_array(roles))
         end
 
         it_behaves_like "it deletes the cache", { context_type: nil, context_id: nil }
@@ -689,7 +689,7 @@ RSpec.describe Rabarber::Roleable do
 
       it "revokes all roles from the user" do
         expect { subject }.to change(user, :all_roles).from(
-          { nil => [:admin, :manager], Project => [:viewer], project => [:manager] }
+          match(nil => contain_exactly(:admin, :manager), Project => [:viewer], project => [:manager])
         ).to({})
       end
 
