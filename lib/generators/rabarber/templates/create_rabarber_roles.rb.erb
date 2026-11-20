@@ -2,7 +2,7 @@
 
 class CreateRabarberRoles < ActiveRecord::Migration[<%= ActiveRecord::Migration.current_version.to_s %>]
   def change
-    create_table :rabarber_roles do |t|
+    create_table :rabarber_roles<%= ", id: #{@roles_id_type.inspect}" if @roles_id_type %><%= ", default: -> { #{@roles_id_default.inspect} }" if @roles_id_default %> do |t|
       t.string :name, null: false
       t.belongs_to :context, polymorphic: true, index: true, type: <%= @id_type.inspect %>
       t.timestamps
@@ -16,7 +16,7 @@ class CreateRabarberRoles < ActiveRecord::Migration[<%= ActiveRecord::Migration.
     end
 
     create_table :rabarber_roles_roleables, id: false do |t|
-      t.belongs_to :role, null: false, index: true, foreign_key: { to_table: :rabarber_roles }
+      t.belongs_to :role, null: false, index: true, foreign_key: { to_table: :rabarber_roles }<%= ", type: #{@roles_id_type.inspect}" if @roles_id_type %>
       t.belongs_to :roleable, null: false, index: true, foreign_key: { to_table: <%= table_name.to_sym.inspect %>, primary_key: primary_key(<%= table_name.to_sym.inspect %>) }, type: <%= @id_type.inspect %>
     end
 

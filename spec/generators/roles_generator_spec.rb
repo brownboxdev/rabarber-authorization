@@ -6,15 +6,17 @@ require "generators/rabarber/roles_generator"
 RSpec.describe Rabarber::RolesGenerator do
   subject { described_class.start(args) }
 
+  let(:args) { [:my_users] }
   let(:migration_file) { "db/migrate/20221201201056_create_rabarber_roles.rb" }
-  let(:id_type) { ActiveRecord::Base.connection.columns(:my_users).find { |column| column.name == "id" }.sql_type }
+  let(:id_column) { ActiveRecord::Base.connection.columns(:my_users).find { |column| column.name == "id" } }
+  let(:id_type) { id_column.sql_type }
   let(:migration_content) do
     <<~MIGRATION
       # frozen_string_literal: true
 
       class CreateRabarberRoles < ActiveRecord::Migration[6.2]
         def change
-          create_table :rabarber_roles do |t|
+          create_table :rabarber_roles#{roles_table_options} do |t|
             t.string :name, null: false
             t.belongs_to :context, polymorphic: true, index: true, type: #{id_type.inspect}
             t.timestamps
@@ -28,7 +30,7 @@ RSpec.describe Rabarber::RolesGenerator do
           end
 
           create_table :rabarber_roles_roleables, id: false do |t|
-            t.belongs_to :role, null: false, index: true, foreign_key: { to_table: :rabarber_roles }
+            t.belongs_to :role, null: false, index: true, foreign_key: { to_table: :rabarber_roles }#{role_options}
             t.belongs_to :roleable, null: false, index: true, foreign_key: { to_table: :my_users, primary_key: primary_key(:my_users) }, type: #{id_type.inspect}
           end
 
@@ -41,14 +43,10 @@ RSpec.describe Rabarber::RolesGenerator do
   before do
     allow(Time).to receive(:now).and_return(Time.new(2022, 12, 1, 21, 10, 56, "+01:00"))
     allow(ActiveRecord::Migration).to receive(:current_version).and_return(6.2)
-
-    ActiveRecord::Base.connection.create_table(:my_users, id: false, force: true) do |t|
-      t.string :id, primary_key: true, limit: 36
-    end
   end
 
   after do
-    ActiveRecord::Base.connection.drop_table(:my_users)
+    ActiveRecord::Base.connection.drop_table(:my_users, if_exists: true)
     FileUtils.rm_rf(Dir.glob("db"))
   end
 
@@ -64,8 +62,37 @@ RSpec.describe Rabarber::RolesGenerator do
     end
   end
 
-  context "when only the table name is given" do
-    let(:args) { [:my_users] }
+  context "when the users table has auto-incrementing ids" do
+    let(:roles_table_options) { "" }
+    let(:role_options) { "" }
+
+    before { ActiveRecord::Base.connection.create_table(:my_users, force: true) }
+
+    it_behaves_like "a migration generator"
+  end
+
+  context "when the users table has ids set by the app" do
+    let(:roles_table_options) { ", id: #{id_type.inspect}" }
+    let(:role_options) { ", type: #{id_type.inspect}" }
+
+    before do
+      ActiveRecord::Base.connection.create_table(:my_users, id: false, force: true) do |t|
+        t.string :id, primary_key: true, limit: 36
+      end
+    end
+
+    it_behaves_like "a migration generator"
+  end
+
+  context "when the users table has ids set by the database" do
+    let(:roles_table_options) { ", id: #{id_type.inspect}, default: -> { #{id_column.default_function.inspect} }" }
+    let(:role_options) { ", type: #{id_type.inspect}" }
+
+    before do
+      ActiveRecord::Base.connection.create_table(:my_users, id: false, force: true) do |t|
+        t.string :id, primary_key: true, limit: 36, default: -> { "(lower('ABC'))" }
+      end
+    end
 
     it_behaves_like "a migration generator"
   end
