@@ -74,14 +74,17 @@ Rails.application.config.to_prepare do
 end
 ```
 
-If it stores UUIDs as binary:
+If it also stores them as binary, add your binary type on top of that:
 
 ```rb
 Rails.application.config.to_prepare do
+  Rabarber::Role.before_create { self.id ||= SecureRandom.uuid }
   [:id, :context_id].each { |name| Rabarber::Role.attribute name, YourBinaryUuidType.new }
   [:role_id, :roleable_id].each { |name| Rabarber::RoleAssignment.attribute name, YourBinaryUuidType.new }
 end
 ```
+
+If your app sets any other kind of id itself, such as its own integer ids, do the same with your own id handling.
 
 Run the migration:
 
