@@ -73,12 +73,12 @@ RSpec.describe Rabarber::Role do
         described_class.register(:editor, context: user)
       end
 
-      it { is_expected.to eq(nil => [:admin, :accountant], Project => [:admin, :manager], project1 => [:manager], project2 => [:viewer, :manager], user => [:editor]) }
+      it { is_expected.to match(nil => contain_exactly(:admin, :accountant), Project => contain_exactly(:admin, :manager), project1 => [:manager], project2 => contain_exactly(:viewer, :manager), user => [:editor]) }
 
       context "when the instance context can't be found" do
         before { project1.destroy! }
 
-        it { is_expected.to eq(nil => [:admin, :accountant], Project => [:admin, :manager], project2 => [:viewer, :manager], user => [:editor]) }
+        it { is_expected.to match(nil => contain_exactly(:admin, :accountant), Project => contain_exactly(:admin, :manager), project2 => contain_exactly(:viewer, :manager), user => [:editor]) }
       end
 
       context "when the class context doesn't exist" do
