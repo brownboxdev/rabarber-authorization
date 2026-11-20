@@ -1,3 +1,9 @@
+## v6.1.1
+
+### Bugs:
+
+- Fixed the generated migration using integer primary keys when the user table uses UUIDs
+
 ## v6.1.0
 
 ### Features:
