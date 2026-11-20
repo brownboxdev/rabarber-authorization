@@ -64,12 +64,22 @@ Generate the migration to store roles (replace `users` with your table name if d
 rails generate rabarber:roles users
 ```
 
-Rabarber's tables use the same primary key type as your users table, so the table must exist before you run the generator. With binary UUIDs in MySQL, apply your UUID handling to Rabarber's models too, for example:
+Rabarber's tables use the same primary key type as your users table, so the table must exist before you run the generator.
+
+If your database can't handle your UUIDs on its own, apply your app's UUID handling to Rabarber's models in an initializer. The examples below show which models and attributes need it; the code itself depends on how your app handles UUIDs. If your app generates UUIDs:
 
 ```rb
 Rails.application.config.to_prepare do
-  Rabarber::Role.attribute :context_id, YourBinaryUuidType.new
-  Rabarber::RoleAssignment.attribute :roleable_id, YourBinaryUuidType.new
+  Rabarber::Role.before_create { self.id ||= SecureRandom.uuid }
+end
+```
+
+If it stores UUIDs as binary:
+
+```rb
+Rails.application.config.to_prepare do
+  [:id, :context_id].each { |name| Rabarber::Role.attribute name, YourBinaryUuidType.new }
+  [:role_id, :roleable_id].each { |name| Rabarber::RoleAssignment.attribute name, YourBinaryUuidType.new }
 end
 ```
 
