@@ -11,13 +11,13 @@ RSpec.describe Rabarber::MigrationHelpers do
 
   describe "#migrate_authorization_context!" do
     it "migrates roles from old context class to new context class" do
-      roles = Rabarber::Role.where(context_type: "User")
+      role_ids = Rabarber::Role.where(context_type: "User").ids
 
-      expect(roles.count).to eq(2)
+      expect(role_ids.size).to eq(2)
 
       dummy_migration.migrate_authorization_context!("User", "Client")
 
-      expect(Rabarber::Role.where(id: roles.pluck(:id)).pluck(:context_type)).to all(eq("Client"))
+      expect(Rabarber::Role.where(id: role_ids).pluck(:context_type)).to all(eq("Client"))
     end
 
     it "migrates roles to a class that does not exist" do
@@ -49,13 +49,13 @@ RSpec.describe Rabarber::MigrationHelpers do
 
   describe "#delete_authorization_context!" do
     it "deletes roles for the given context" do
-      roles = Rabarber::Role.where(context_type: "User")
+      role_ids = Rabarber::Role.where(context_type: "User").ids
 
-      expect(roles.count).to eq(2)
+      expect(role_ids.size).to eq(2)
 
       dummy_migration.delete_authorization_context!("User")
 
-      expect(Rabarber::Role.exists?(id: roles.pluck(:id))).to be false
+      expect(Rabarber::Role.exists?(id: role_ids)).to be false
     end
 
     it "does nothing when no roles exist in the context" do
